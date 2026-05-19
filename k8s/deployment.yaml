@@ -16,9 +16,15 @@ spec:
     spec:
       containers:
         - name: ml-api
-          image: softdevaksacr.azurecr.io/ml-api:v1
+          image: softdevaksacr.azurecr.io/ml-api:v5
           ports:
             - containerPort: 8000
+          env:
+            - name: APPINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: appinsights-secret
+                  key: connection-string
           resources:
             requests:
               memory: "256Mi"

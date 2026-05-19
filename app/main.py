@@ -1,11 +1,30 @@
+import os
+import time
+import logging
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
-import time
 from model import predict
 
+logger = logging.getLogger(__name__)
+
+APPINSIGHTS_CONNECTION_STRING = os.getenv("APPINSIGHTS_CONNECTION_STRING", "")
+
+if APPINSIGHTS_CONNECTION_STRING:
+    from azure.monitor.opentelemetry import configure_azure_monitor
+    configure_azure_monitor(connection_string=APPINSIGHTS_CONNECTION_STRING)
+    print(">>> Azure Monitor OpenTelemetry configured", flush=True)
+    logger.info("Azure Monitor OpenTelemetry configured")
+
 app = FastAPI(title="ML Inference API", version="1.0.0")
+
+if APPINSIGHTS_CONNECTION_STRING:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    FastAPIInstrumentor.instrument_app(app)
+    print(">>> FastAPI instrumented with OpenTelemetry", flush=True)
+    logger.info("FastAPI instrumented with OpenTelemetry")
 
 REQUEST_COUNT = Counter(
     "api_requests_total",
@@ -46,6 +65,7 @@ def predict_endpoint(request: PredictRequest):
         result = predict(request.features)
         REQUEST_COUNT.labels(method="POST", endpoint="/predict", status="200").inc()
         REQUEST_LATENCY.labels(endpoint="/predict").observe(time.time() - start)
+        logger.info(f"Prediction: class={result['class_name']} prob={result['probability']}")
         return result
     except Exception as e:
         REQUEST_COUNT.labels(method="POST", endpoint="/predict", status="500").inc()

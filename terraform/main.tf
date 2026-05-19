@@ -45,6 +45,7 @@ resource "azurerm_kubernetes_cluster" "main" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   dns_prefix          = "${var.prefix}-aks"
+  oidc_issuer_enabled = true
 
   default_node_pool {
     name           = "default"
@@ -82,4 +83,22 @@ resource "azurerm_role_assignment" "aks_acr" {
   scope                = azurerm_container_registry.main.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_kubernetes_cluster.main.kubelet_identity[0].object_id
+}
+
+resource "azurerm_application_insights" "main" {
+  name                = "${var.prefix}-appinsights"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  workspace_id        = azurerm_log_analytics_workspace.main.id
+  application_type    = "web"
+}
+
+output "appinsights_connection_string" {
+  value     = azurerm_application_insights.main.connection_string
+  sensitive = true
+}
+
+output "appinsights_instrumentation_key" {
+  value     = azurerm_application_insights.main.instrumentation_key
+  sensitive = true
 }
