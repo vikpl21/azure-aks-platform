@@ -33,7 +33,7 @@ resource "azurerm_subnet" "aks" {
 }
 
 resource "azurerm_container_registry" "main" {
-  name                = "${var.prefix}acr"  # must be globally unique, no dashes
+  name                = "${var.prefix}acr" # must be globally unique, no dashes
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = "Basic"
@@ -47,10 +47,10 @@ resource "azurerm_kubernetes_cluster" "main" {
   dns_prefix          = "${var.prefix}-aks"
 
   default_node_pool {
-    name            = "default"
-    node_count      = 1
-    vm_size         = "Standard_B2als_v2"
-    vnet_subnet_id  = azurerm_subnet.aks.id
+    name           = "default"
+    node_count     = 1
+    vm_size        = "Standard_B2als_v2"
+    vnet_subnet_id = azurerm_subnet.aks.id
   }
 
   identity {
@@ -58,9 +58,9 @@ resource "azurerm_kubernetes_cluster" "main" {
   }
 
   network_profile {
-    network_plugin     = "azure"
-    service_cidr       = "10.1.0.0/16"
-    dns_service_ip     = "10.1.0.10"
+    network_plugin = "azure"
+    service_cidr   = "10.1.0.0/16"
+    dns_service_ip = "10.1.0.10"
   }
 
   # Container Insights (Phase 3 — підготовка вже зараз)
